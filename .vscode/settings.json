@@ -1,0 +1,23 @@
+{
+  "files.exclude": {
+    "**/target": true,
+    "**/.mvn": true,
+    "**/.git": true,
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.DS_Store": true
+  },
+  "explorer.compactFolders": true,
+  "java.project.explorer.showNonJavaResources": false,
+  "java.settings.appearance": "compact",
+  "java.compile.nullAnalysis.mode": "disabled",
+  "java.errors.incompleteClasspath.severity": "ignore",
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "boot-java.validation.java.version-validation": "OFF",
+  "spring-boot.ls.problem.boot-version-validation": "IGNORE",
+  "spring-boot.ls.problem.version-validation.UNSUPPORTED_OSS_VERSION": "IGNORE",
+  "spring-boot.ls.problem.version-validation.UNSUPPORTED_COMMERCIAL_VERSION": "IGNORE",
+  "spring-boot.ls.problem.version-validation.NEWER_MINOR_VERSION": "IGNORE",
+  "spring-boot.ls.problem.version-validation.NEWER_PATCH_VERSION": "IGNORE",
+  "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx1G"
+}
