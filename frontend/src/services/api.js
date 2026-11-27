@@ -26,7 +26,7 @@ export const getApiBaseUrl = () => {
   if (typeof window !== 'undefined') {
     const isCapacitor = window.location.protocol === 'capacitor:' || (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
     if (isCapacitor) {
-      return 'https://rentmanager-backend.onrender.com/api';
+      return 'https://rentmanager-backend-lw9w.onrender.com/api';
     }
   }
   return '/api';

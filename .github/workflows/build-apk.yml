@@ -10,7 +10,7 @@ on:
       backend_url:
         description: 'Live Cloud Backend API URL'
         required: false
-        default: 'https://rentmanager-backend.onrender.com/api'
+        default: 'https://rentmanager-backend-lw9w.onrender.com/api'
 
 permissions:
   contents: write
@@ -42,7 +42,7 @@ jobs:
       - name: Build Web App
         working-directory: frontend
         env:
-          VITE_API_BASE_URL: ${{ github.event.inputs.backend_url || 'https://rentmanager-backend.onrender.com/api' }}
+          VITE_API_BASE_URL: ${{ github.event.inputs.backend_url || 'https://rentmanager-backend-lw9w.onrender.com/api' }}
         run: npm run build
 
       - name: Grant Execute Permission to Gradlew
