@@ -45,12 +45,12 @@ jobs:
           VITE_API_BASE_URL: ${{ github.event.inputs.backend_url || 'https://rentmanager-backend.onrender.com/api' }}
         run: npm run build
 
-      - name: Sync Capacitor Android
-        working-directory: frontend
-        run: npx cap sync android
-
       - name: Grant Execute Permission to Gradlew
         run: chmod +x frontend/android/gradlew
+
+      - name: Copy Web Assets to Android
+        working-directory: frontend
+        run: npx cap copy android
 
       - name: Build Android Debug APK
         working-directory: frontend/android
