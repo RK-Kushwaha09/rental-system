@@ -47,6 +47,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- H2 Database Engine (Instant Zero-Config Cloud & Local Fallback) -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- JWT Token Library -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
