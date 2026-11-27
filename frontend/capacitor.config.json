@@ -1,0 +1,9 @@
+{
+  "appId": "com.rentmanager.pro",
+  "appName": "RentManager Pro",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  }
+}

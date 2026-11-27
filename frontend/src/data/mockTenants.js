@@ -1,0 +1,86 @@
+/**
+ * Mock data for RentManager Pro Tenants flow
+ */
+
+export const INITIAL_LEDGER_SUMMARY = {
+  month: 'OCT',
+  percentCollected: '71.5% Collected',
+  rentDue: 32500,
+  collected: 23261,
+  pending: 9239,
+};
+
+export const INITIAL_TENANTS = [
+  {
+    id: 'tenant-1',
+    name: 'Amit Patel',
+    roomNumber: '204',
+    floor: '1st Floor',
+    mobile: '+91 98240 77123',
+    joinedDate: '12 Jan 2026',
+    status: 'DUE',
+    statusTag: 'Bill Pending (Oct)',
+    outstandingBalance: '₹9,239 Due (Rent + Power)',
+    avatar: 'AP',
+    avatarBg: '#FEE2E2',
+    avatarColor: '#991B1B',
+    alertDot: true,
+    filterCategory: 'PAYMENT DUE',
+  },
+  {
+    id: 'tenant-2',
+    name: 'Vikram Singh',
+    roomNumber: '101',
+    floor: 'Ground Floor',
+    mobile: '+91 98250 11234',
+    joinedDate: '01 Nov 2025',
+    status: 'PAID',
+    statusTag: 'Paid (Oct)',
+    paymentStatus: '₹8,850 Settled • UPI #9042',
+    avatar: 'VS',
+    avatarBg: '#DCFCE7',
+    avatarColor: '#166534',
+    verifiedDot: true,
+    filterCategory: 'ACTIVE',
+  },
+  {
+    id: 'tenant-3',
+    name: 'Rahul Sharma',
+    roomNumber: '102',
+    floor: 'Ground Floor',
+    mobile: '+91 98790 44556',
+    joinedDate: '15 Mar 2026',
+    status: 'UPCOMING',
+    statusTag: 'Due in 3 Days',
+    scheduledBilling: '₹8,000 / month',
+    avatar: 'RS',
+    avatarBg: '#DBEAFE',
+    avatarColor: '#1E40AF',
+    filterCategory: 'ACTIVE',
+  },
+  {
+    id: 'tenant-4',
+    name: 'Priya Shah',
+    roomNumber: '103',
+    floor: 'Ground Floor',
+    mobile: '+91 97230 88990',
+    joinedDate: '01 Feb 2026',
+    status: 'ADVANCE',
+    statusTag: '₹10 Advance Credit',
+    meterStatus: 'Oct meter reading pending',
+    actionRequired: true,
+    avatar: 'PS',
+    avatarBg: '#EDE9FE',
+    avatarColor: '#5B21B6',
+    filterCategory: 'ADVANCE',
+  },
+];
+
+export const VACANT_ROOM_105 = {
+  roomNumber: '105',
+  roomType: 'Standard Single',
+  floor: 'Ground Floor',
+  expectedRent: 7500,
+  status: 'VACANT',
+  tag: 'UNRENTED',
+};
