@@ -59,9 +59,14 @@ jobs:
       - name: Build Android Debug APK
         working-directory: frontend/android
         run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-35" "build-tools;35.0.0" || true
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          set +e
+          ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee /tmp/gradle.log
+          EXIT_CODE=${PIPESTATUS[0]}
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "::error::Gradle build failed with exit code $EXIT_CODE"
+            tail -n 120 /tmp/gradle.log
+            exit $EXIT_CODE
+          fi
 
       - name: Prepare APK Output
         run: |
