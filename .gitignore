@@ -18,6 +18,8 @@ Thumbs.db
 # Logs & temp
 *.log
 scratch/
+backend/data/
+data/
 test_*.js
 test_*.ps1
 verify_*.js
