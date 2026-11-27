@@ -63,10 +63,18 @@ jobs:
           ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee /tmp/gradle.log
           EXIT_CODE=${PIPESTATUS[0]}
           if [ $EXIT_CODE -ne 0 ]; then
-            echo "::error::Gradle build failed with exit code $EXIT_CODE"
-            tail -n 120 /tmp/gradle.log
+            ERR_MSG=$(grep -E 'FAILURE:|What went wrong:|Caused by:|error:' /tmp/gradle.log | head -n 10 | tr '\r\n' ' ')
+            echo "::error title=Gradle Failure::$ERR_MSG"
+            cat /tmp/gradle.log | tail -n 80
             exit $EXIT_CODE
           fi
+
+      - name: Upload Gradle Log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-failure-log
+          path: /tmp/gradle.log
 
       - name: Prepare APK Output
         run: |
