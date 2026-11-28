@@ -151,6 +151,22 @@ export const authAPI = {
     }
     return res;
   },
+
+  async resetPassword({ identifier, otp, newPassword }) {
+    const res = await request('/auth/password/reset', {
+      method: 'POST',
+      body: JSON.stringify({ identifier, otp, newPassword }),
+    });
+
+    if (!res || res.status === 'ERROR') {
+      throw new Error(res?.message || 'Password reset failed.');
+    }
+
+    if (res.token) {
+      localStorage.setItem('rm_auth_token', res.token);
+    }
+    return res;
+  },
 };
 
 /**

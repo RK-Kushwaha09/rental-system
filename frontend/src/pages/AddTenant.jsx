@@ -1458,11 +1458,12 @@ export default function AddTenant() {
                 <input
                   type="tel"
                   placeholder="98765 43210"
+                  maxLength={10}
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                   className="input-field"
                 />
-                {phone.trim().length >= 10 && <CheckCircle2 size={18} color="#16A34A" />}
+                {phone.trim().length === 10 && <CheckCircle2 size={18} color="#16A34A" />}
               </div>
             </div>
 
@@ -1488,10 +1489,12 @@ export default function AddTenant() {
                 <input
                   type="tel"
                   placeholder="98765 43210"
+                  maxLength={10}
                   value={emergencyContact}
-                  onChange={(e) => setEmergencyContact(e.target.value)}
+                  onChange={(e) => setEmergencyContact(e.target.value.replace(/\D/g, '').slice(0, 10))}
                   className="input-field"
                 />
+                {emergencyContact.trim().length === 10 && <CheckCircle2 size={18} color="#16A34A" />}
               </div>
             </div>
 
@@ -1854,33 +1857,41 @@ export default function AddTenant() {
             </div>
           )}
 
-          {/* PAGE 3: REVEALED WHEN EXISTING TENANT IS SELECTED */}
+          {/* SECTION: Existing Tenant Billing & Historical Records */}
           {tenantType === 'EXISTING' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '4px' }}>
+            <div
+              style={{
+                backgroundColor: '#FFFFFF',
+                border: '1px solid var(--color-border)',
+                borderRadius: '16px',
+                padding: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '14px',
+                boxShadow: 'var(--shadow-subtle)',
+              }}
+            >
               {/* Header */}
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Calendar size={17} color="var(--color-interactive)" />
-                    <span style={{ fontSize: '15px', fontWeight: 800 }}>Historical Records</span>
-                  </div>
-                  <span
-                    style={{
-                      backgroundColor: '#EFF6FF',
-                      color: 'var(--color-interactive)',
-                      border: '1px solid #DBEAFE',
-                      borderRadius: '9999px',
-                      padding: '2px 8px',
-                      fontSize: '10.5px',
-                      fontWeight: 700,
-                    }}
-                  >
-                    UP TO 12 MONTHS
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Calendar size={18} color="var(--color-interactive)" />
+                  <span style={{ fontSize: '15px', fontWeight: 800, color: 'var(--color-text-main)' }}>
+                    Historical Records
                   </span>
                 </div>
-                <p style={{ fontSize: '12px', color: '#64748B', marginTop: '2px' }}>
-                  Add previous rent and electricity records.
-                </p>
+                <span
+                  style={{
+                    backgroundColor: '#EFF6FF',
+                    color: 'var(--color-interactive)',
+                    border: '1px solid #DBEAFE',
+                    borderRadius: '9999px',
+                    padding: '2px 9px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                  }}
+                >
+                  UP TO 12 MONTHS
+                </span>
               </div>
 
               {/* Mode Toggle Switcher */}
@@ -1888,7 +1899,7 @@ export default function AddTenant() {
                 style={{
                   display: 'flex',
                   gap: '6px',
-                  padding: '3px',
+                  padding: '4px',
                   backgroundColor: '#F1F5F9',
                   borderRadius: '10px',
                 }}
@@ -1904,16 +1915,17 @@ export default function AddTenant() {
                     fontWeight: 700,
                     border: 'none',
                     backgroundColor: existingImportMode === 'DIARY' ? '#FFFFFF' : 'transparent',
-                    color: existingImportMode === 'DIARY' ? '#0F172A' : '#64748B',
+                    color: existingImportMode === 'DIARY' ? 'var(--color-text-main)' : '#64748B',
                     boxShadow: existingImportMode === 'DIARY' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '6px',
                     cursor: 'pointer',
+                    transition: 'all 0.15s ease',
                   }}
                 >
-                  <Sparkles size={14} color="#2563EB" />
+                  <Sparkles size={14} color="var(--color-interactive)" />
                   <span>AI Diary Scan</span>
                 </button>
                 <button
@@ -1927,13 +1939,14 @@ export default function AddTenant() {
                     fontWeight: 700,
                     border: 'none',
                     backgroundColor: existingImportMode === 'MANUAL' ? '#FFFFFF' : 'transparent',
-                    color: existingImportMode === 'MANUAL' ? '#0F172A' : '#64748B',
+                    color: existingImportMode === 'MANUAL' ? 'var(--color-text-main)' : '#64748B',
                     boxShadow: existingImportMode === 'MANUAL' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '6px',
                     cursor: 'pointer',
+                    transition: 'all 0.15s ease',
                   }}
                 >
                   <Pencil size={13} />
@@ -1947,37 +1960,36 @@ export default function AddTenant() {
                   {/* Photo Upload Card */}
                   <div
                     style={{
-                      backgroundColor: '#FFFFFF',
-                      border: '1px solid var(--color-border)',
-                      borderRadius: '14px',
+                      backgroundColor: '#F8FAFC',
+                      border: '1px solid #E2E8F0',
+                      borderRadius: '12px',
                       padding: '14px',
-                      boxShadow: 'var(--shadow-subtle)',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: '10px',
+                      gap: '12px',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div
                         style={{
-                          width: '30px',
-                          height: '30px',
+                          width: '32px',
+                          height: '32px',
                           borderRadius: '8px',
                           backgroundColor: '#EFF6FF',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          color: '#2563EB',
+                          color: 'var(--color-interactive)',
                         }}
                       >
-                        <Camera size={15} />
+                        <Camera size={16} />
                       </div>
                       <div>
-                        <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#0F172A' }}>
+                        <div style={{ fontSize: '13.5px', fontWeight: 800, color: 'var(--color-text-main)' }}>
                           Upload Diary Photos
                         </div>
                         <div style={{ fontSize: '11.5px', color: '#64748B' }}>
-                          Upload photos of your rent diary.
+                          Upload photos of your rent diary for instant AI extraction.
                         </div>
                       </div>
                     </div>
@@ -1997,9 +2009,9 @@ export default function AddTenant() {
                       onClick={() => fileInputRef.current?.click()}
                       style={{
                         border: '1.5px dashed #93C5FD',
-                        backgroundColor: '#F8FAFC',
+                        backgroundColor: '#FFFFFF',
                         borderRadius: '10px',
-                        padding: '16px 12px',
+                        padding: '18px 12px',
                         textAlign: 'center',
                         cursor: 'pointer',
                         transition: 'background-color 0.15s ease',
@@ -2011,7 +2023,7 @@ export default function AddTenant() {
                           height: '38px',
                           borderRadius: '50%',
                           backgroundColor: '#EFF6FF',
-                          color: '#2563EB',
+                          color: 'var(--color-interactive)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -2030,7 +2042,7 @@ export default function AddTenant() {
 
                     {/* Uploaded Images Preview Grid */}
                     {diaryFiles.length > 0 && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>
                             Uploaded Diary Pages ({diaryFiles.length})
@@ -2058,7 +2070,7 @@ export default function AddTenant() {
                         <div
                           style={{
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
                             gap: '10px',
                           }}
                         >
@@ -2126,7 +2138,7 @@ export default function AddTenant() {
                                       borderRadius: '4px',
                                       padding: '3px',
                                       cursor: 'pointer',
-                                      color: '#2563EB',
+                                      color: 'var(--color-interactive)',
                                     }}
                                     title="View Full Image"
                                   >
@@ -2154,56 +2166,6 @@ export default function AddTenant() {
                         </div>
                       </div>
                     )}
-
-                    {/* Gemini API Key Configuration Box */}
-                    <div
-                      style={{
-                        backgroundColor: '#F8FAFC',
-                        border: scanError && (!apiKeyInput || !apiKeyInput.startsWith('AIzaSy')) ? '1.5px solid #FCA5A5' : '1px solid #E2E8F0',
-                        borderRadius: '10px',
-                        padding: '10px 12px',
-                        marginBottom: '10px',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                          🔑 Gemini API Key (Required for AI Vision)
-                        </span>
-                        <a
-                          href="https://aistudio.google.com/app/apikey"
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{ fontSize: '11px', color: '#2563EB', fontWeight: 700, textDecoration: 'underline' }}
-                        >
-                          Get Free Key (30s) ↗
-                        </a>
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="Paste your key here (e.g. AIzaSy...)"
-                        value={apiKeyInput}
-                        onChange={(e) => {
-                          const val = e.target.value.trim();
-                          setApiKeyInput(val);
-                          localStorage.setItem('rm_gemini_api_key', val);
-                          if (scanError) setScanError(null);
-                        }}
-                        style={{
-                          width: '100%',
-                          height: '36px',
-                          padding: '6px 10px',
-                          fontSize: '12px',
-                          borderRadius: '8px',
-                          border: scanError && (!apiKeyInput || !apiKeyInput.startsWith('AIzaSy')) ? '1.5px solid #EF4444' : '1px solid #CBD5E1',
-                          backgroundColor: '#FFFFFF',
-                          color: '#0F172A',
-                          boxSizing: 'border-box',
-                        }}
-                      />
-                      <div style={{ fontSize: '10.5px', color: '#64748B', marginTop: '4px', lineHeight: '1.3' }}>
-                        Google Gemini Vision requires a valid API key starting with <code>AIzaSy...</code> from Google AI Studio.
-                      </div>
-                    </div>
 
                     {/* Scan Button */}
                     <button
@@ -2302,31 +2264,6 @@ export default function AddTenant() {
                       >
                         <AlertCircle size={15} style={{ flexShrink: 0 }} />
                         <span>{scanError}</span>
-                      </div>
-                    )}
-
-                    {/* Option to start blank spreadsheet without photo */}
-                    {spreadsheetRows.length === 0 && !scanning && (
-                      <div style={{ textAlign: 'center', paddingTop: '2px' }}>
-                        <button
-                          type="button"
-                          onClick={startBlankSpreadsheet}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            color: 'var(--color-interactive)',
-                            fontSize: '12px',
-                            fontWeight: 700,
-                            cursor: 'pointer',
-                            textDecoration: 'underline',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '5px',
-                          }}
-                        >
-                          <Pencil size={12} />
-                          <span>Or enter records manually without photo</span>
-                        </button>
                       </div>
                     )}
                   </div>

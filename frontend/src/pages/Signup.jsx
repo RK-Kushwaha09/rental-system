@@ -9,6 +9,7 @@ import {
   Clock,
   ChevronRight,
   Building,
+  CheckCircle2,
 } from 'lucide-react';
 import AuthLayout from '../layouts/AuthLayout';
 import Button from '../components/Button';
@@ -164,17 +165,18 @@ export default function Signup() {
               icon={<Contact size={18} />}
               placeholder="Enter your full name"
               autoComplete="off"
-                name="signup-full-name"
+              name="signup-full-name"
               value={fullName}
+              isValid={fullName.trim().length >= 3}
               onChange={(e) => setFullName(e.target.value)}
             />
 
             <div className="form-group">
               <div className="form-label-row">
                 <label className="form-label">Mobile Number</label>
-                <span className="form-label-hint">For OTP & WhatsApp</span>
+                <span className="form-label-hint">10 digits strictly</span>
               </div>
-              <div className="input-container">
+              <div className="input-container" style={{ paddingRight: '12px' }}>
                 <div className="badge-country">
                   <span>🇮🇳</span>
                   <span>+91</span>
@@ -185,9 +187,11 @@ export default function Signup() {
                   autoComplete="off"
                   name="signup-mobile"
                   className="input-field"
+                  maxLength={10}
                   value={mobile}
-                  onChange={(e) => setMobile(e.target.value)}
+                  onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
                 />
+                {mobile.length === 10 && <CheckCircle2 size={18} color="#16A34A" style={{ flexShrink: 0 }} />}
               </div>
             </div>
 
@@ -198,8 +202,9 @@ export default function Signup() {
               type="email"
               placeholder="you@example.com"
               autoComplete="off"
-                  name="signup-email"
+              name="signup-email"
               value={email}
+              isValid={email.includes('@') && email.includes('.') && email.trim().length >= 5}
               onChange={(e) => setEmail(e.target.value)}
             />
 
@@ -208,10 +213,11 @@ export default function Signup() {
               rightLabel="Min. 8 characters"
               icon={<Lock size={18} />}
               type="password"
-              placeholder="Enter password"
+              placeholder="Enter password (min 8 chars)"
               autoComplete="new-password"
-                name="signup-password"
+              name="signup-password"
               value={password}
+              isValid={password.length >= 8}
               onChange={(e) => setPassword(e.target.value)}
             />
 
@@ -220,8 +226,9 @@ export default function Signup() {
               rightLabel="Must match"
               icon={<Lock size={18} />}
               type="password"
-              placeholder="Enter password"
+              placeholder="Re-enter password"
               value={confirmPassword}
+              isValid={confirmPassword.length >= 8 && confirmPassword === password}
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
 

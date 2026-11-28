@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 
 /**
  * Reusable Input component with icon prefix, custom rightLabel (e.g., hints or links),
- * country code prefix, and password toggle support.
+ * country code prefix, validation checkmark, and password toggle support.
  */
 export default function Input({
   label,
@@ -11,6 +11,8 @@ export default function Input({
   hint,
   icon,
   prefix,
+  suffix,
+  isValid,
   type = 'text',
   value,
   onChange,
@@ -56,6 +58,18 @@ export default function Input({
           className={`input-field ${inputClassName}`.trim()}
           {...rest}
         />
+
+        {isValid && (
+          <div style={{ display: 'flex', alignItems: 'center', paddingRight: '8px', color: '#16A34A', flexShrink: 0 }}>
+            <CheckCircle2 size={18} color="#16A34A" />
+          </div>
+        )}
+
+        {suffix && !isValid && (
+          <div style={{ display: 'flex', alignItems: 'center', paddingRight: '8px', flexShrink: 0 }}>
+            {suffix}
+          </div>
+        )}
 
         {isPasswordField && (
           <button

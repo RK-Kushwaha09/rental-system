@@ -2,6 +2,7 @@ package com.rentmanager.dto;
 
 public class OtpVerifyRequest {
     private String mobile;
+    private String identifier;
     private String otp;
 
     public OtpVerifyRequest() {}
@@ -12,11 +13,19 @@ public class OtpVerifyRequest {
     }
 
     public String getMobile() {
-        return mobile;
+        return (mobile != null && !mobile.trim().isEmpty()) ? mobile : identifier;
     }
 
     public void setMobile(String mobile) {
         this.mobile = mobile;
+    }
+
+    public String getIdentifier() {
+        return identifier;
+    }
+
+    public void setIdentifier(String identifier) {
+        this.identifier = identifier;
     }
 
     public String getOtp() {

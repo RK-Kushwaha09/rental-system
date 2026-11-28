@@ -51,4 +51,13 @@ public class AuthController {
         }
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/password/reset")
+    public ResponseEntity<ApiResponse<Object>> resetPassword(@RequestBody ResetPasswordRequest request) {
+        ApiResponse<Object> response = authService.resetPassword(request);
+        if ("ERROR".equalsIgnoreCase(response.getStatus())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+        return ResponseEntity.ok(response);
+    }
 }

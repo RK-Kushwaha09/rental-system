@@ -7,9 +7,10 @@ import {
   MessageSquare,
   ShieldCheck,
   ChevronRight,
-  Sparkles,
   Building2,
   CheckCircle2,
+  KeyRound,
+  RotateCcw,
 } from 'lucide-react';
 import AuthLayout from '../layouts/AuthLayout';
 import Button from '../components/Button';
@@ -20,7 +21,7 @@ import { authAPI } from '../services/api';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { setOwner, createdProperty } = usePropertySetup();
+  const { setOwner } = usePropertySetup();
 
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -35,15 +36,36 @@ export default function Login() {
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpError, setOtpError] = useState('');
 
-  // Forgot Password Modal
+  // Forgot Password Modal State
   const [showForgotModal, setShowForgotModal] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState('');
-  const [forgotSubmitted, setForgotSubmitted] = useState(false);
+  const [forgotStep, setForgotStep] = useState(1);
+  const [forgotIdentifier, setForgotIdentifier] = useState('');
+  const [forgotOtp, setForgotOtp] = useState('');
+  const [forgotNewPassword, setForgotNewPassword] = useState('');
+  const [forgotConfirmPassword, setForgotConfirmPassword] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotError, setForgotError] = useState('');
+  const [forgotSuccess, setForgotSuccess] = useState('');
+
+  const handleIdentifierChange = (e) => {
+    const val = e.target.value;
+    if (/^\d+$/.test(val)) {
+      setIdentifier(val.slice(0, 10));
+    } else {
+      setIdentifier(val);
+    }
+  };
+
+  const isIdentifierValid =
+    /^\d{10}$/.test(identifier.trim()) ||
+    (identifier.includes('@') && identifier.includes('.') && identifier.trim().length >= 5);
+
+  const isPasswordValid = password.length >= 6;
 
   const handleLogin = async (e) => {
     if (e) e.preventDefault();
     if (!identifier.trim()) {
-      setError('Please enter your mobile number or email');
+      setError('Please enter your 10-digit mobile number or email');
       return;
     }
     if (!password) {
@@ -142,6 +164,110 @@ export default function Login() {
       }
     } finally {
       setOtpLoading(false);
+    }
+  };
+
+  // Forgot Password Handlers
+  const handleForgotIdentifierChange = (e) => {
+    const val = e.target.value;
+    if (/^\d+$/.test(val)) {
+      setForgotIdentifier(val.slice(0, 10));
+    } else {
+      setForgotIdentifier(val);
+    }
+  };
+
+  const isForgotIdValid =
+    /^\d{10}$/.test(forgotIdentifier.trim()) ||
+    (forgotIdentifier.includes('@') && forgotIdentifier.includes('.') && forgotIdentifier.trim().length >= 5);
+
+  const handleForgotSendOtp = async (e) => {
+    if (e) e.preventDefault();
+    if (!forgotIdentifier.trim()) {
+      setForgotError('Please enter your registered mobile number or email');
+      return;
+    }
+    const cleanMobile = forgotIdentifier.replace(/\D/g, '');
+    const isMobile = cleanMobile.length === 10;
+    const isEmail = forgotIdentifier.includes('@') && forgotIdentifier.includes('.');
+    if (!isMobile && !isEmail) {
+      setForgotError('Please enter a valid 10-digit mobile number or email');
+      return;
+    }
+
+    try {
+      setForgotLoading(true);
+      setForgotError('');
+      setForgotSuccess('');
+      const reqId = isMobile ? cleanMobile : forgotIdentifier.trim();
+      const res = await authAPI.requestOtp(reqId);
+      setForgotSuccess(res?.message || 'OTP sent successfully! (Test OTP: 123456)');
+      setForgotStep(2);
+    } catch (err) {
+      if (err.isNetworkError || err.name === 'TypeError' || err.message?.includes('Failed to fetch') || err.message?.includes('Unable to connect')) {
+        setForgotError('Unable to connect to server. Please try again.');
+      } else {
+        setForgotError(err.message || 'Failed to send OTP. Please check your credentials.');
+      }
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const handleForgotResetPassword = async (e) => {
+    if (e) e.preventDefault();
+    const cleanOtp = forgotOtp.trim();
+    if (cleanOtp.length !== 6) {
+      setForgotError('Please enter the 6-digit OTP');
+      return;
+    }
+    if (forgotNewPassword.length < 6) {
+      setForgotError('New password must be at least 6 characters long');
+      return;
+    }
+    if (forgotNewPassword !== forgotConfirmPassword) {
+      setForgotError('Passwords do not match');
+      return;
+    }
+
+    try {
+      setForgotLoading(true);
+      setForgotError('');
+      const cleanMobile = forgotIdentifier.replace(/\D/g, '');
+      const isMobile = cleanMobile.length === 10;
+      const reqId = isMobile ? cleanMobile : forgotIdentifier.trim();
+
+      const res = await authAPI.resetPassword({
+        identifier: reqId,
+        otp: cleanOtp,
+        newPassword: forgotNewPassword,
+      });
+
+      if (!res || res.status === 'ERROR' || !res.token) {
+        setForgotError(res?.message || 'Password reset failed. Please try again.');
+        return;
+      }
+
+      setOwner((prev) => ({
+        ...prev,
+        ...res.user,
+        isLoggedIn: true,
+      }));
+      setShowForgotModal(false);
+
+      if (res.user?.hasProperty || res.user?.setupCompleted) {
+        navigate('/home');
+      } else {
+        navigate('/setup/property');
+      }
+    } catch (err) {
+      if (err.isNetworkError || err.name === 'TypeError' || err.message?.includes('Failed to fetch') || err.message?.includes('Unable to connect')) {
+        setForgotError('Unable to connect to server. Please try again.');
+      } else {
+        setForgotError(err.message || 'Password reset failed. Please check OTP and try again.');
+      }
+    } finally {
+      setForgotLoading(false);
     }
   };
 
@@ -251,12 +377,14 @@ export default function Login() {
         <form autoComplete="off" onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '6px' }}>
           <Input
             label="Mobile Number or Email"
+            rightLabel="10 digits or email"
             icon={<Contact size={19} />}
-            placeholder="+91 98765 43210 or email"
+            placeholder="10-digit mobile number or email"
             autoComplete="off"
             name="login-identifier"
             value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
+            isValid={isIdentifierValid}
+            onChange={handleIdentifierChange}
           />
 
           <Input
@@ -266,10 +394,16 @@ export default function Login() {
                 type="button"
                 onClick={() => {
                   setShowForgotModal(true);
-                  setForgotSubmitted(false);
+                  setForgotStep(1);
+                  setForgotError('');
+                  setForgotSuccess('');
+                  setForgotIdentifier(identifier.trim());
+                  setForgotOtp('');
+                  setForgotNewPassword('');
+                  setForgotConfirmPassword('');
                 }}
                 className="link-blue"
-                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
               >
                 Forgot Password?
               </button>
@@ -280,6 +414,7 @@ export default function Login() {
             autoComplete="new-password"
             name="login-password"
             value={password}
+            isValid={isPasswordValid}
             onChange={(e) => setPassword(e.target.value)}
           />
 
@@ -449,7 +584,7 @@ export default function Login() {
                   setOtpError('');
                   setOtpValue('');
                 }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B', fontSize: '18px' }}
               >
                 ✕
               </button>
@@ -480,11 +615,18 @@ export default function Login() {
                 <Input
                   label="Registered Mobile Number"
                   prefix={<span style={{ fontWeight: 600, marginRight: '6px' }}>🇮🇳 +91</span>}
-                  placeholder="98765 43210"
+                  placeholder="9876543210"
+                  type="tel"
+                  maxLength={10}
                   value={otpMobile}
-                  onChange={(e) => setOtpMobile(e.target.value)}
+                  isValid={otpMobile.length === 10}
+                  onChange={(e) => setOtpMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
                 />
-                <Button variant="primary" disabled={otpLoading} onClick={handleSendOtp}>
+                <Button
+                  variant="primary"
+                  disabled={otpLoading || otpMobile.length !== 10}
+                  onClick={handleSendOtp}
+                >
                   {otpLoading ? 'Sending...' : 'Send OTP →'}
                 </Button>
               </>
@@ -492,12 +634,39 @@ export default function Login() {
               <>
                 <Input
                   label="Enter 6-Digit OTP"
-                  placeholder="Enter 6-digit OTP"
-                  value={otpValue}
-                  onChange={(e) => setOtpValue(e.target.value)}
+                  placeholder="Enter 6-digit OTP (e.g. 123456)"
+                  type="tel"
                   maxLength={6}
+                  value={otpValue}
+                  isValid={otpValue.length === 6}
+                  onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 />
-                <Button variant="blue" disabled={otpLoading} onClick={handleVerifyOtp}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOtpSent(false);
+                      setOtpValue('');
+                      setOtpError('');
+                    }}
+                    style={{ background: 'none', border: 'none', color: 'var(--color-interactive)', fontSize: '12.5px', cursor: 'pointer', fontWeight: 600 }}
+                  >
+                    ← Change Number
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSendOtp}
+                    disabled={otpLoading}
+                    style={{ background: 'none', border: 'none', color: 'var(--color-interactive)', fontSize: '12.5px', cursor: 'pointer', fontWeight: 600 }}
+                  >
+                    Resend OTP
+                  </button>
+                </div>
+                <Button
+                  variant="blue"
+                  disabled={otpLoading || otpValue.length !== 6}
+                  onClick={handleVerifyOtp}
+                >
                   {otpLoading ? 'Verifying...' : 'Verify & Continue →'}
                 </Button>
               </>
@@ -506,7 +675,7 @@ export default function Login() {
         </div>
       )}
 
-      {/* Forgot Password Modal */}
+      {/* Forgot / Reset Password Modal */}
       {showForgotModal && (
         <div
           style={{
@@ -525,58 +694,162 @@ export default function Login() {
               backgroundColor: '#FFFFFF',
               borderRadius: '20px',
               padding: '24px',
-              maxWidth: '380px',
+              maxWidth: '400px',
               width: '100%',
               display: 'flex',
               flexDirection: 'column',
               gap: '16px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 700 }}>Reset Password</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <KeyRound size={20} color="var(--color-interactive)" />
+                <h3 style={{ fontSize: '18px', fontWeight: 700 }}>
+                  {forgotStep === 1 ? 'Reset Password' : 'Set New Password'}
+                </h3>
+              </div>
               <button
                 type="button"
                 onClick={() => setShowForgotModal(false)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B', fontSize: '18px' }}
               >
                 ✕
               </button>
             </div>
 
-            {forgotSubmitted ? (
-              <div style={{ textAlign: 'center', padding: '16px 0' }}>
-                <CheckCircle2 size={40} color="var(--color-success)" style={{ margin: '0 auto 10px' }} />
-                <p style={{ fontSize: '14px', fontWeight: 600 }}>Reset instructions sent!</p>
-                <p style={{ fontSize: '12px', color: '#64748B', marginTop: '4px' }}>
-                  Please check your SMS and email for the password reset link.
-                </p>
-                <Button
-                  variant="primary"
-                  style={{ marginTop: '16px' }}
-                  onClick={() => setShowForgotModal(false)}
-                >
-                  Close
-                </Button>
+            {forgotError && (
+              <div
+                style={{
+                  backgroundColor: 'var(--color-error-bg)',
+                  border: '1px solid var(--color-error-border)',
+                  color: 'var(--color-error)',
+                  borderRadius: '8px',
+                  padding: '8px 12px',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                }}
+              >
+                {forgotError}
               </div>
-            ) : (
-              <>
-                <p style={{ fontSize: '13px', color: '#64748B' }}>
-                  Enter your registered mobile or email to receive a password recovery link.
+            )}
+
+            {forgotSuccess && (
+              <div
+                style={{
+                  backgroundColor: '#F0FDF4',
+                  border: '1px solid #BBF7D0',
+                  color: '#15803D',
+                  borderRadius: '8px',
+                  padding: '8px 12px',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                }}
+              >
+                {forgotSuccess}
+              </div>
+            )}
+
+            {forgotStep === 1 ? (
+              <form onSubmit={handleForgotSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <p style={{ fontSize: '13px', color: '#64748B', lineHeight: '1.4' }}>
+                  Enter your registered 10-digit mobile number or email. We'll verify your identity with an OTP so you can set a new password.
                 </p>
+
                 <Input
-                  label="Mobile or Email"
-                  placeholder="you@example.com"
-                  value={forgotEmail}
-                  onChange={(e) => setForgotEmail(e.target.value)}
+                  label="Registered Mobile or Email"
+                  rightLabel="10 digits strictly"
+                  icon={<Contact size={18} />}
+                  placeholder="e.g. 9876543210 or user@gmail.com"
+                  value={forgotIdentifier}
+                  isValid={isForgotIdValid}
+                  onChange={handleForgotIdentifierChange}
                 />
+
                 <Button
+                  type="submit"
                   variant="primary"
-                  onClick={() => setForgotSubmitted(true)}
-                  disabled={!forgotEmail}
+                  disabled={forgotLoading || !isForgotIdValid}
                 >
-                  Send Recovery Link →
+                  {forgotLoading ? 'Sending OTP...' : 'Send Verification OTP →'}
                 </Button>
-              </>
+              </form>
+            ) : (
+              <form onSubmit={handleForgotResetPassword} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <p style={{ fontSize: '12.5px', color: '#64748B', lineHeight: '1.4' }}>
+                  Enter the 6-digit OTP sent for <strong>{forgotIdentifier}</strong> and create your new secure password.
+                </p>
+
+                <Input
+                  label="Enter 6-Digit OTP"
+                  rightLabel="Universal test OTP: 123456"
+                  placeholder="Enter 6-digit OTP"
+                  type="tel"
+                  maxLength={6}
+                  value={forgotOtp}
+                  isValid={forgotOtp.length === 6}
+                  onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                />
+
+                <Input
+                  label="New Password"
+                  rightLabel="Min 6 characters"
+                  icon={<Lock size={18} />}
+                  type="password"
+                  placeholder="Enter new password"
+                  value={forgotNewPassword}
+                  isValid={forgotNewPassword.length >= 6}
+                  onChange={(e) => setForgotNewPassword(e.target.value)}
+                />
+
+                <Input
+                  label="Confirm New Password"
+                  rightLabel="Must match"
+                  icon={<Lock size={18} />}
+                  type="password"
+                  placeholder="Confirm new password"
+                  value={forgotConfirmPassword}
+                  isValid={forgotConfirmPassword.length >= 6 && forgotConfirmPassword === forgotNewPassword}
+                  onChange={(e) => setForgotConfirmPassword(e.target.value)}
+                />
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForgotStep(1);
+                      setForgotOtp('');
+                      setForgotError('');
+                      setForgotSuccess('');
+                    }}
+                    style={{ background: 'none', border: 'none', color: 'var(--color-interactive)', fontSize: '12.5px', cursor: 'pointer', fontWeight: 600 }}
+                  >
+                    ← Change ID / Mobile
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleForgotSendOtp}
+                    disabled={forgotLoading}
+                    style={{ background: 'none', border: 'none', color: 'var(--color-interactive)', fontSize: '12.5px', cursor: 'pointer', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                  >
+                    <RotateCcw size={12} />
+                    Resend OTP
+                  </button>
+                </div>
+
+                <Button
+                  type="submit"
+                  variant="primary"
+                  disabled={
+                    forgotLoading ||
+                    forgotOtp.length !== 6 ||
+                    forgotNewPassword.length < 6 ||
+                    forgotNewPassword !== forgotConfirmPassword
+                  }
+                >
+                  {forgotLoading ? 'Updating Password...' : 'Reset Password & Login →'}
+                </Button>
+              </form>
             )}
           </div>
         </div>

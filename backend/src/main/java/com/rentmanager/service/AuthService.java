@@ -155,54 +155,79 @@ public class AuthService {
         return response;
     }
 
-    public ApiResponse<Object> requestOtp(String mobile) {
-        if (mobile == null || mobile.trim().isEmpty()) {
-            return ApiResponse.error("Mobile number is required.");
+    public ApiResponse<Object> requestOtp(String identifier) {
+        if (identifier == null || identifier.trim().isEmpty()) {
+            return ApiResponse.error("Mobile number or email is required.");
         }
 
-        String cleanMobile = mobile.replaceAll("\\D", "");
-        if (cleanMobile.length() < 10) {
-            return ApiResponse.error("Please enter a valid 10-digit mobile number.");
-        }
+        String input = identifier.trim();
+        String cleanMobile = input.replaceAll("\\D", "");
 
-        Optional<User> userOpt = userRepository.findByMobile(cleanMobile)
-                .or(() -> userRepository.findByMobile(mobile));
+        Optional<User> userOpt = Optional.empty();
+        if (cleanMobile.length() >= 10) {
+            userOpt = userRepository.findByMobile(cleanMobile)
+                    .or(() -> userRepository.findByMobile(input));
+        }
+        if (userOpt.isEmpty() && input.contains("@")) {
+            userOpt = userRepository.findByEmail(input.toLowerCase());
+        }
 
         if (userOpt.isEmpty()) {
-            return ApiResponse.error("No account found with mobile number +91 " + cleanMobile + ". Please sign up first.");
+            return ApiResponse.error("No account found with " + input + ". Please check or sign up first.");
         }
 
-        otpService.generateOtp(cleanMobile);
-        return ApiResponse.success("OTP sent successfully to registered mobile +91 " + cleanMobile, null);
+        User user = userOpt.get();
+        String targetMobile = (user.getMobile() != null && !user.getMobile().isEmpty())
+                ? user.getMobile().replaceAll("\\D", "")
+                : cleanMobile;
+        otpService.generateOtp(targetMobile);
+
+        String displayContact = targetMobile.length() >= 4
+                ? "+91 ******" + targetMobile.substring(targetMobile.length() - 4)
+                : input;
+
+        return ApiResponse.success("OTP sent successfully to " + displayContact, null);
     }
 
-    public ApiResponse<Object> verifyOtp(String mobile, String otp) {
-        if (mobile == null || mobile.trim().isEmpty()) {
-            return ApiResponse.error("Mobile number is required.");
+    public ApiResponse<Object> verifyOtp(String identifier, String otp) {
+        if (identifier == null || identifier.trim().isEmpty()) {
+            return ApiResponse.error("Mobile number or email is required.");
         }
         if (otp == null || otp.trim().isEmpty()) {
             return ApiResponse.error("OTP is required.");
         }
 
-        String cleanMobile = mobile.replaceAll("\\D", "");
-        Optional<User> userOpt = userRepository.findByMobile(cleanMobile)
-                .or(() -> userRepository.findByMobile(mobile));
+        String input = identifier.trim();
+        String cleanMobile = input.replaceAll("\\D", "");
 
-        if (userOpt.isEmpty()) {
-            return ApiResponse.error("No registered account found with this mobile number.");
+        Optional<User> userOpt = Optional.empty();
+        if (cleanMobile.length() >= 10) {
+            userOpt = userRepository.findByMobile(cleanMobile)
+                    .or(() -> userRepository.findByMobile(input));
+        }
+        if (userOpt.isEmpty() && input.contains("@")) {
+            userOpt = userRepository.findByEmail(input.toLowerCase());
         }
 
-        if (otpService.isExpired(cleanMobile)) {
+        if (userOpt.isEmpty()) {
+            return ApiResponse.error("No registered account found with " + input + ".");
+        }
+
+        User user = userOpt.get();
+        String targetMobile = (user.getMobile() != null && !user.getMobile().isEmpty())
+                ? user.getMobile().replaceAll("\\D", "")
+                : cleanMobile;
+
+        if (otpService.isExpired(targetMobile)) {
             return ApiResponse.error("OTP has expired. Please request a new OTP.");
         }
 
-        boolean isValid = otpService.verifyOtp(cleanMobile, otp);
+        boolean isValid = otpService.verifyOtp(targetMobile, otp);
         if (!isValid) {
             return ApiResponse.error("Invalid OTP entered. Please try again.");
         }
 
-        User user = userOpt.get();
-        String token = tokenProvider.generateToken(user.getMobile());
+        String token = tokenProvider.generateToken(user.getMobile() != null ? user.getMobile() : user.getUserId());
 
         ApiResponse<Object> response = new ApiResponse<>();
         response.setStatus("SUCCESS");
@@ -213,6 +238,74 @@ public class AuthService {
         userData.put("fullName", user.getFullName());
         userData.put("mobile", user.getMobile());
         userData.put("email", user.getEmail());
+        userData.put("role", user.getRole());
+        boolean hasProperty = propertyRepository.existsByUser(user);
+        boolean setupDone = (user.getSetupCompleted() != null && user.getSetupCompleted()) || hasProperty;
+        userData.put("hasProperty", hasProperty);
+        userData.put("setupCompleted", setupDone);
+        response.setUser(userData);
+
+        return response;
+    }
+
+    public ApiResponse<Object> resetPassword(ResetPasswordRequest request) {
+        if (request == null) {
+            return ApiResponse.error("Password reset details are required.");
+        }
+        String identifier = request.getIdentifier() != null ? request.getIdentifier().trim() : "";
+        if (identifier.isEmpty()) {
+            return ApiResponse.error("Mobile number or email is required.");
+        }
+        String otp = request.getOtp() != null ? request.getOtp().trim() : "";
+        if (otp.isEmpty()) {
+            return ApiResponse.error("Verification code (OTP) is required.");
+        }
+        String newPassword = request.getNewPassword() != null ? request.getNewPassword().trim() : "";
+        if (newPassword.length() < 6) {
+            return ApiResponse.error("New password must be at least 6 characters long.");
+        }
+
+        String cleanMobile = identifier.replaceAll("\\D", "");
+        Optional<User> userOpt = Optional.empty();
+        if (cleanMobile.length() >= 10) {
+            userOpt = userRepository.findByMobile(cleanMobile);
+        }
+        if (userOpt.isEmpty() && identifier.contains("@")) {
+            userOpt = userRepository.findByEmail(identifier.toLowerCase());
+        }
+        if (userOpt.isEmpty()) {
+            userOpt = userRepository.findByMobile(identifier)
+                    .or(() -> userRepository.findByEmail(identifier));
+        }
+
+        if (userOpt.isEmpty()) {
+            return ApiResponse.error("No registered account found with this mobile number or email.");
+        }
+
+        User user = userOpt.get();
+        String verifyMobile = user.getMobile() != null ? user.getMobile() : cleanMobile;
+
+        boolean isOtpValid = otpService.verifyOtp(verifyMobile, otp);
+        if (!isOtpValid) {
+            return ApiResponse.error("Invalid verification code (OTP). Please check and try again.");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        String token = tokenProvider.generateToken(user.getMobile() != null ? user.getMobile() : user.getUserId());
+
+        ApiResponse<Object> response = new ApiResponse<>();
+        response.setStatus("SUCCESS");
+        response.setMessage("Password reset successfully! Logging you in...");
+        response.setToken(token);
+
+        Map<String, Object> userData = new HashMap<>();
+        userData.put("id", user.getUserId());
+        userData.put("fullName", user.getFullName());
+        userData.put("identifier", identifier);
+        userData.put("email", user.getEmail());
+        userData.put("mobile", user.getMobile());
         userData.put("role", user.getRole());
         boolean hasProperty = propertyRepository.existsByUser(user);
         boolean setupDone = (user.getSetupCompleted() != null && user.getSetupCompleted()) || hasProperty;
