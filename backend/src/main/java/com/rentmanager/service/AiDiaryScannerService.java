@@ -24,13 +24,13 @@ public class AiDiaryScannerService {
     private static final Logger log = LoggerFactory.getLogger(AiDiaryScannerService.class);
 
     private static final String DEFAULT_EMBEDDED_KEY = new String(
-            Base64.getDecoder().decode("QVEuQWI4Uk42SXRQVG1vQ2thRmdBeEZTVFJkSmdJVDNVakZuODM5Z1N3T1ZLV1A0Q2VLX3c=")
+            Base64.getDecoder().decode("QVEuQWI4Uk42SkV1UERpUF9EVm80VFp2Tk5NZ0x5SG9UQ2xsRlBlVWdsMk5zNHdWaVNLYVE=")
     );
 
     @Value("${gemini.api.key:}")
     private String geminiApiKey;
 
-    @Value("${gemini.api.model:gemini-2.5-flash}")
+    @Value("${gemini.api.model:gemini-3.5-flash-lite}")
     private String geminiModel;
 
     private final ObjectMapper objectMapper;

@@ -112,8 +112,18 @@ export default function AddTenant() {
   const [scanElapsed, setScanElapsed] = useState(0);
   const [scanError, setScanError] = useState(null);
   const [scanSummary, setScanSummary] = useState(null);
-  const [apiKeyInput, setApiKeyInput] = useState(() => localStorage.getItem('rm_gemini_api_key') || '');
-  const [showApiKeyInput, setShowApiKeyInput] = useState(() => !localStorage.getItem('rm_gemini_api_key'));
+  const ACTIVE_DEFAULT_GEMINI_KEY = typeof window !== 'undefined' && window.atob
+    ? window.atob('QVEuQWI4Uk42SkV1UERpUF9EVm80VFp2Tk5NZ0x5SG9UQ2xsRlBlVWdsMk5zNHdWaVNLYVE=')
+    : '';
+  const [apiKeyInput, setApiKeyInput] = useState(() => {
+    const stored = localStorage.getItem('rm_gemini_api_key');
+    if (!stored || stored.includes('ItPTmoCkaFgAxFSTRdJgIT3UjFn839gSwOVKWP4CeK_w')) {
+      localStorage.setItem('rm_gemini_api_key', ACTIVE_DEFAULT_GEMINI_KEY);
+      return ACTIVE_DEFAULT_GEMINI_KEY;
+    }
+    return stored;
+  });
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   const [spreadsheetRows, setSpreadsheetRows] = useState([]);
   const [previewModalImage, setPreviewModalImage] = useState(null);
   const [editingCoveredIdx, setEditingCoveredIdx] = useState(null);
