@@ -112,6 +112,8 @@ export default function AddTenant() {
   const [scanElapsed, setScanElapsed] = useState(0);
   const [scanError, setScanError] = useState(null);
   const [scanSummary, setScanSummary] = useState(null);
+  const [apiKeyInput, setApiKeyInput] = useState(() => localStorage.getItem('rm_gemini_api_key') || '');
+  const [showApiKeyInput, setShowApiKeyInput] = useState(() => !localStorage.getItem('rm_gemini_api_key'));
   const [spreadsheetRows, setSpreadsheetRows] = useState([]);
   const [previewModalImage, setPreviewModalImage] = useState(null);
   const [editingCoveredIdx, setEditingCoveredIdx] = useState(null);
@@ -258,7 +260,7 @@ export default function AddTenant() {
       if (selectedRoom) formData.append('roomNumber', String(selectedRoom));
       if (monthlyRent) formData.append('monthlyRent', String(monthlyRent));
       if (electricityRate) formData.append('electricityRate', String(electricityRate));
-      const customKey = localStorage.getItem('rm_gemini_api_key');
+      const customKey = (apiKeyInput && apiKeyInput.trim()) || localStorage.getItem('rm_gemini_api_key');
       if (customKey && customKey.trim()) formData.append('apiKey', customKey.trim());
 
       const res = await tenantAPI.scanDiary(formData);
@@ -329,7 +331,13 @@ export default function AddTenant() {
       }
     } catch (err) {
       console.error('Diary scan error:', err);
-      setScanError(err?.message || 'Failed to scan diary. Please check your image or enter records in the spreadsheet.');
+      const msg = String(err?.message || '');
+      if (msg.includes('401') || msg.includes('API key') || msg.includes('UNAUTHENTICATED') || msg.includes('ACCESS_TOKEN_TYPE_UNSUPPORTED')) {
+        setScanError('Invalid or expired Gemini API key. Please enter a valid Gemini API key (starts with AIzaSy...) below to scan your diary photo.');
+        setShowApiKeyInput(true);
+      } else {
+        setScanError(err?.message || 'Failed to scan diary. Please check your image or enter records in the spreadsheet.');
+      }
     } finally {
       setScanning(false);
     }
@@ -2136,6 +2144,56 @@ export default function AddTenant() {
                         </div>
                       </div>
                     )}
+
+                    {/* Gemini API Key Configuration Box */}
+                    <div
+                      style={{
+                        backgroundColor: '#F8FAFC',
+                        border: scanError && (!apiKeyInput || !apiKeyInput.startsWith('AIzaSy')) ? '1.5px solid #FCA5A5' : '1px solid #E2E8F0',
+                        borderRadius: '10px',
+                        padding: '10px 12px',
+                        marginBottom: '10px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                          🔑 Gemini API Key (Required for AI Vision)
+                        </span>
+                        <a
+                          href="https://aistudio.google.com/app/apikey"
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{ fontSize: '11px', color: '#2563EB', fontWeight: 700, textDecoration: 'underline' }}
+                        >
+                          Get Free Key (30s) ↗
+                        </a>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Paste your key here (e.g. AIzaSy...)"
+                        value={apiKeyInput}
+                        onChange={(e) => {
+                          const val = e.target.value.trim();
+                          setApiKeyInput(val);
+                          localStorage.setItem('rm_gemini_api_key', val);
+                          if (scanError) setScanError(null);
+                        }}
+                        style={{
+                          width: '100%',
+                          height: '36px',
+                          padding: '6px 10px',
+                          fontSize: '12px',
+                          borderRadius: '8px',
+                          border: scanError && (!apiKeyInput || !apiKeyInput.startsWith('AIzaSy')) ? '1.5px solid #EF4444' : '1px solid #CBD5E1',
+                          backgroundColor: '#FFFFFF',
+                          color: '#0F172A',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                      <div style={{ fontSize: '10.5px', color: '#64748B', marginTop: '4px', lineHeight: '1.3' }}>
+                        Google Gemini Vision requires a valid API key starting with <code>AIzaSy...</code> from Google AI Studio.
+                      </div>
+                    </div>
 
                     {/* Scan Button */}
                     <button
