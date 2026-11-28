@@ -377,9 +377,8 @@ export default function Login() {
         <form autoComplete="off" onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '6px' }}>
           <Input
             label="Mobile Number or Email"
-            rightLabel="10 digits or email"
             icon={<Contact size={19} />}
-            placeholder="10-digit mobile number or email"
+            placeholder="Mobile number or email"
             autoComplete="off"
             name="login-identifier"
             value={identifier}
@@ -753,14 +752,13 @@ export default function Login() {
             {forgotStep === 1 ? (
               <form onSubmit={handleForgotSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <p style={{ fontSize: '13px', color: '#64748B', lineHeight: '1.4' }}>
-                  Enter your registered 10-digit mobile number or email. We'll verify your identity with an OTP so you can set a new password.
+                  Enter your registered mobile number or email to receive an OTP.
                 </p>
 
                 <Input
                   label="Registered Mobile or Email"
-                  rightLabel="10 digits strictly"
                   icon={<Contact size={18} />}
-                  placeholder="e.g. 9876543210 or user@gmail.com"
+                  placeholder="Mobile number or email"
                   value={forgotIdentifier}
                   isValid={isForgotIdValid}
                   onChange={handleForgotIdentifierChange}
@@ -777,12 +775,11 @@ export default function Login() {
             ) : (
               <form onSubmit={handleForgotResetPassword} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <p style={{ fontSize: '12.5px', color: '#64748B', lineHeight: '1.4' }}>
-                  Enter the 6-digit OTP sent for <strong>{forgotIdentifier}</strong> and create your new secure password.
+                  Enter the 6-digit OTP sent for <strong>{forgotIdentifier}</strong> and create your new password.
                 </p>
 
                 <Input
                   label="Enter 6-Digit OTP"
-                  rightLabel="Universal test OTP: 123456"
                   placeholder="Enter 6-digit OTP"
                   type="tel"
                   maxLength={6}
@@ -793,10 +790,9 @@ export default function Login() {
 
                 <Input
                   label="New Password"
-                  rightLabel="Min 6 characters"
                   icon={<Lock size={18} />}
                   type="password"
-                  placeholder="Enter new password"
+                  placeholder="New password (min 6 chars)"
                   value={forgotNewPassword}
                   isValid={forgotNewPassword.length >= 6}
                   onChange={(e) => setForgotNewPassword(e.target.value)}
@@ -804,7 +800,6 @@ export default function Login() {
 
                 <Input
                   label="Confirm New Password"
-                  rightLabel="Must match"
                   icon={<Lock size={18} />}
                   type="password"
                   placeholder="Confirm new password"

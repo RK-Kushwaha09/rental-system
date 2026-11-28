@@ -161,9 +161,8 @@ export default function Signup() {
           >
             <Input
               label="Full Name"
-              rightLabel="Required"
               icon={<Contact size={18} />}
-              placeholder="Enter your full name"
+              placeholder="Enter full name"
               autoComplete="off"
               name="signup-full-name"
               value={fullName}
@@ -172,10 +171,7 @@ export default function Signup() {
             />
 
             <div className="form-group">
-              <div className="form-label-row">
-                <label className="form-label">Mobile Number</label>
-                <span className="form-label-hint">10 digits strictly</span>
-              </div>
+              <label className="form-label">Mobile Number</label>
               <div className="input-container" style={{ paddingRight: '12px' }}>
                 <div className="badge-country">
                   <span>🇮🇳</span>
@@ -183,7 +179,7 @@ export default function Signup() {
                 </div>
                 <input
                   type="tel"
-                  placeholder="10-digit mobile number"
+                  placeholder="Mobile number"
                   autoComplete="off"
                   name="signup-mobile"
                   className="input-field"
@@ -197,10 +193,9 @@ export default function Signup() {
 
             <Input
               label="Email Address"
-              rightLabel="For monthly ledgers"
               icon={<Mail size={18} />}
               type="email"
-              placeholder="you@example.com"
+              placeholder="Email address"
               autoComplete="off"
               name="signup-email"
               value={email}
@@ -210,10 +205,9 @@ export default function Signup() {
 
             <Input
               label="Password"
-              rightLabel="Min. 8 characters"
               icon={<Lock size={18} />}
               type="password"
-              placeholder="Enter password (min 8 chars)"
+              placeholder="Password (min 8 chars)"
               autoComplete="new-password"
               name="signup-password"
               value={password}
@@ -223,10 +217,9 @@ export default function Signup() {
 
             <Input
               label="Confirm Password"
-              rightLabel="Must match"
               icon={<Lock size={18} />}
               type="password"
-              placeholder="Re-enter password"
+              placeholder="Confirm password"
               value={confirmPassword}
               isValid={confirmPassword.length >= 8 && confirmPassword === password}
               onChange={(e) => setConfirmPassword(e.target.value)}
