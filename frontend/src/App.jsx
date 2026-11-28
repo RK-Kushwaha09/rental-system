@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { PropertySetupProvider } from './context/PropertySetupContext';
 
 // Pages
@@ -116,12 +116,47 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+/**
+ * Handles Android hardware / gesture back button events from Capacitor MainActivity.
+ * If a modal or preview dialog is open, it closes the modal.
+ * If on any nested screen, it navigates back in React Router history.
+ */
+function HardwareBackButtonHandler() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const handleBackButton = (e) => {
+      // 1. Close any open modal dialog or preview image if present
+      const modalClose = document.querySelector('[data-modal-close="true"], .modal-close-btn, button[title="Close"], button[aria-label="Close"]');
+      if (modalClose) {
+        e.preventDefault();
+        modalClose.click();
+        return;
+      }
+
+      // 2. If not on a root dashboard/login page, navigate to previous screen
+      const rootPaths = ['/', '/login', '/home', '/dashboard'];
+      if (!rootPaths.includes(location.pathname)) {
+        e.preventDefault();
+        navigate(-1);
+      }
+    };
+
+    window.addEventListener('appBackButton', handleBackButton);
+    return () => window.removeEventListener('appBackButton', handleBackButton);
+  }, [navigate, location]);
+
+  return null;
+}
+
 export default function App() {
   return (
     <PropertySetupProvider>
       <ErrorBoundary>
         <BrowserRouter>
-        <Routes>
+          <HardwareBackButtonHandler />
+          <Routes>
           {/* Default redirect to Login */}
           <Route path="/" element={<Navigate to="/login" replace />} />
 
