@@ -258,6 +258,8 @@ export default function AddTenant() {
       if (selectedRoom) formData.append('roomNumber', String(selectedRoom));
       if (monthlyRent) formData.append('monthlyRent', String(monthlyRent));
       if (electricityRate) formData.append('electricityRate', String(electricityRate));
+      const customKey = localStorage.getItem('rm_gemini_api_key');
+      if (customKey && customKey.trim()) formData.append('apiKey', customKey.trim());
 
       const res = await tenantAPI.scanDiary(formData);
       const resultData = res?.invoice || res?.data || res;

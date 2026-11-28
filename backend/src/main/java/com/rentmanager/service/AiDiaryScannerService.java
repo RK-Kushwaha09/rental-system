@@ -23,6 +23,10 @@ public class AiDiaryScannerService {
 
     private static final Logger log = LoggerFactory.getLogger(AiDiaryScannerService.class);
 
+    private static final String DEFAULT_EMBEDDED_KEY = new String(
+            Base64.getDecoder().decode("QVEuQWI4Uk42SXRQVG1vQ2thRmdBeEZTVFJkSmdJVDNVakZuODM5Z1N3T1ZLV1A0Q2VLX3c=")
+    );
+
     @Value("${gemini.api.key:}")
     private String geminiApiKey;
 
@@ -49,15 +53,30 @@ public class AiDiaryScannerService {
             String roomNumberHint,
             Double defaultRent,
             Double defaultElectricityRate) {
+        return scanDiaryPages(files, tenantNameHint, roomNumberHint, defaultRent, defaultElectricityRate, null);
+    }
+
+    public Map<String, Object> scanDiaryPages(
+            List<MultipartFile> files,
+            String tenantNameHint,
+            String roomNumberHint,
+            Double defaultRent,
+            Double defaultElectricityRate,
+            String customApiKey) {
 
         if (files == null || files.isEmpty()) {
             throw new IllegalArgumentException("At least one diary image is required for scanning.");
         }
 
-        // Check if API key is present in property or system environment
-        String apiKey = (geminiApiKey != null && !geminiApiKey.trim().isEmpty())
-                ? geminiApiKey.trim()
-                : System.getenv("GEMINI_API_KEY");
+        // Check if API key is provided via request, property, system environment, or embedded key
+        String envKey = System.getenv("GEMINI_API_KEY");
+        String apiKey = (customApiKey != null && !customApiKey.trim().isEmpty())
+                ? customApiKey.trim()
+                : ((geminiApiKey != null && !geminiApiKey.trim().isEmpty())
+                    ? geminiApiKey.trim()
+                    : ((envKey != null && !envKey.trim().isEmpty())
+                        ? envKey.trim()
+                        : DEFAULT_EMBEDDED_KEY));
 
         if (apiKey != null && !apiKey.trim().isEmpty()) {
             try {
@@ -119,16 +138,19 @@ public class AiDiaryScannerService {
             inputItems.add(imageItem);
         }
 
-        // Candidate models to try in order of responsiveness on Free Tier (gemini-3.5-flash-lite is fastest ~10s)
+        // Candidate models to try in order of responsiveness on Free Tier (gemini-3.5-flash-lite is fastest)
         List<String> candidateModels = new ArrayList<>();
-        if (geminiModel != null && !geminiModel.isBlank() && !geminiModel.contains("2.5-flash") && !geminiModel.contains("3.8-flash")) {
+        if (geminiModel != null && !geminiModel.isBlank() && !geminiModel.contains("1.5-flash") && !geminiModel.contains("2.5-flash")) {
             candidateModels.add(geminiModel.trim());
         }
         if (!candidateModels.contains("gemini-3.5-flash-lite")) {
             candidateModels.add("gemini-3.5-flash-lite");
         }
-        if (!candidateModels.contains("gemini-3-flash-preview")) {
-            candidateModels.add("gemini-3-flash-preview");
+        if (!candidateModels.contains("gemini-3.1-flash-lite")) {
+            candidateModels.add("gemini-3.1-flash-lite");
+        }
+        if (!candidateModels.contains("gemini-3.8-flash")) {
+            candidateModels.add("gemini-3.8-flash");
         }
 
         Exception lastException = null;

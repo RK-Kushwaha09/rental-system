@@ -31,8 +31,9 @@ public class TenantController {
             @RequestParam(value = "tenantName", required = false) String tenantName,
             @RequestParam(value = "roomNumber", required = false) String roomNumber,
             @RequestParam(value = "monthlyRent", required = false) Double monthlyRent,
-            @RequestParam(value = "electricityRate", required = false) Double electricityRate) {
-        Map<String, Object> scanResult = aiDiaryScannerService.scanDiaryPages(files, tenantName, roomNumber, monthlyRent, electricityRate);
+            @RequestParam(value = "electricityRate", required = false) Double electricityRate,
+            @RequestParam(value = "apiKey", required = false) String apiKey) {
+        Map<String, Object> scanResult = aiDiaryScannerService.scanDiaryPages(files, tenantName, roomNumber, monthlyRent, electricityRate, apiKey);
         return ResponseEntity.ok(ApiResponse.success("Diary scanned successfully", scanResult));
     }
 

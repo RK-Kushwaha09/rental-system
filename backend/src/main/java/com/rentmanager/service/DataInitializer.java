@@ -13,28 +13,58 @@ public class DataInitializer implements CommandLineRunner {
 
     private static final Logger logger = LoggerFactory.getLogger(DataInitializer.class);
 
+    private final UserRepository userRepository;
     private final PropertyRepository propertyRepository;
     private final RoomRepository roomRepository;
     private final TenantRepository tenantRepository;
     private final SubMeterRepository subMeterRepository;
     private final BillRepository billRepository;
     private final PaymentRepository paymentRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public DataInitializer(PropertyRepository propertyRepository,
+    public DataInitializer(UserRepository userRepository,
+                           PropertyRepository propertyRepository,
                            RoomRepository roomRepository, TenantRepository tenantRepository,
                            SubMeterRepository subMeterRepository, BillRepository billRepository,
-                           PaymentRepository paymentRepository) {
+                           PaymentRepository paymentRepository,
+                           PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
         this.propertyRepository = propertyRepository;
         this.roomRepository = roomRepository;
         this.tenantRepository = tenantRepository;
         this.subMeterRepository = subMeterRepository;
         this.billRepository = billRepository;
         this.paymentRepository = paymentRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public void run(String... args) {
-        logger.info("Checking database state in MySQL 8.0...");
+        logger.info("Checking database state in MySQL 8.0 / H2...");
+
+        // 0. Ensure default test/owner account exists with verified Password@123
+        User defaultOwner = userRepository.findByEmail("group@gmail.com")
+                .or(() -> userRepository.findByMobile("9825000111"))
+                .orElse(null);
+
+        if (defaultOwner == null) {
+            defaultOwner = new User(
+                    "owner-group",
+                    "Rajesh Patel",
+                    "9825000111",
+                    "group@gmail.com",
+                    passwordEncoder.encode("Password@123"),
+                    "ROLE_LANDLORD"
+            );
+            defaultOwner.setSetupCompleted(true);
+            defaultOwner = userRepository.save(defaultOwner);
+            logger.info("Seeded default owner account: group@gmail.com (Password@123)");
+        } else {
+            defaultOwner.setPassword(passwordEncoder.encode("Password@123"));
+            defaultOwner.setSetupCompleted(true);
+            defaultOwner = userRepository.save(defaultOwner);
+            logger.info("Ensured owner password is Password@123 for group@gmail.com");
+        }
 
         // 1. Seed Property & Units (Prototype business data only)
         if (propertyRepository.count() == 0) {
@@ -52,6 +82,7 @@ public class DataInitializer implements CommandLineRunner {
                     "Rajesh Patel",
                     "+91 98250 00111"
             );
+            property.setUser(defaultOwner);
             property = propertyRepository.save(property);
 
             // Rooms

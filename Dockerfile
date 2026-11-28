@@ -6,4 +6,5 @@ ENV PORT=8080
 ENV DB_URL="jdbc:h2:file:./data/rentmanager_db;DB_CLOSE_DELAY=-1;MODE=MySQL"
 ENV DB_USERNAME=sa
 ENV DB_PASSWORD=""
+ENV GEMINI_MODEL="gemini-3.5-flash-lite"
 ENTRYPOINT ["java", "-jar", "app.jar"]
