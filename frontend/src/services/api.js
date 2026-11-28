@@ -19,16 +19,29 @@ import { INITIAL_TENANTS, INITIAL_LEDGER_SUMMARY } from '../data/mockTenants';
 
 // Dynamic API URL resolver: Supports environment variable, custom localStorage setting, or cloud backend fallback on mobile
 export const getApiBaseUrl = () => {
-  const custom = typeof window !== 'undefined' ? localStorage.getItem('rm_custom_api_url') : null;
-  if (custom && custom.trim()) return custom.trim().replace(/\/+$/, '');
-  if (import.meta.env.VITE_API_BASE_URL) return import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '');
-  
   if (typeof window !== 'undefined') {
     const isCapacitor = window.location.protocol === 'capacitor:' || (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
     if (isCapacitor) {
+      const custom = localStorage.getItem('rm_custom_api_url');
+      if (custom && custom.trim()) return custom.trim().replace(/\/+$/, '');
       return 'https://rentmanager-backend-lw9w.onrender.com/api';
     }
+
+    // On local dev server (localhost / 127.0.0.1), always use local Vite proxy '/api' to guarantee local MySQL connection
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (isLocalhost) {
+      const forceCloud = localStorage.getItem('rm_force_cloud_api');
+      if (forceCloud === 'true') {
+        return 'https://rentmanager-backend-lw9w.onrender.com/api';
+      }
+      return '/api';
+    }
+
+    const custom = localStorage.getItem('rm_custom_api_url');
+    if (custom && custom.trim()) return custom.trim().replace(/\/+$/, '');
   }
+
+  if (import.meta.env.VITE_API_BASE_URL) return import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '');
   return '/api';
 };
 
